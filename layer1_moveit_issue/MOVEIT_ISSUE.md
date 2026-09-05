@@ -20,7 +20,7 @@ That creates a useful engineering question:
 
 This is not only a documentation question — it is checkable directly against the code. In the default `panda_moveit_config` pipeline, `ompl_planning.yaml`'s `response_adapters` run `default_planning_response_adapters/AddTimeOptimalParameterization` (TOTG) followed immediately by `default_planning_response_adapters/ValidateSolution`. Reading `ValidateSolution`'s source (`moveit_ros/planning/planning_response_adapter_plugins/src/validate_path.cpp`) shows it calls `planning_scene->isPathValid()`, which checks collision avoidance, path constraints, and per-waypoint state feasibility — **it never inspects velocity or acceleration**. So on this pipeline, no adapter in the default chain verifies that the trajectory TOTG just produced satisfies the `joint_limits.yaml` bounds it was supposed to enforce. A client that receives `error_code.val == SUCCESS` has no guarantee, from MoveIt itself, that the returned trajectory's commanded accelerations stay within the declared limits.
 
-This is the motivation for a companion independent benchmark tool (planned, not yet published) that would evaluate trajectory realizability independent of MoveIt internals — see "Companion benchmark" below.
+This is the motivation for a companion independent benchmark tool, published at [yycao68/predictive-realizability](https://github.com/yycao68/predictive-realizability), that evaluates trajectory realizability independent of MoveIt internals — see "Companion benchmark" below.
 
 ## Related observations
 
@@ -132,7 +132,7 @@ The most useful feedback from MoveIt maintainers would be:
 
 ## Companion benchmark
 
-A companion independent benchmark tool is planned (not yet published) to make this kind of experiment reproducible without requiring the Predictive Realizability paper. It is designed to separate:
+A companion independent benchmark tool ([yycao68/predictive-realizability](https://github.com/yycao68/predictive-realizability)) makes this kind of experiment reproducible without requiring the Predictive Realizability paper. It separates:
 
 - trajectory generation,
 - trajectory transformation,

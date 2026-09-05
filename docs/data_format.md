@@ -20,6 +20,8 @@ Time must be strictly increasing.
 {
   "joints": {
     "joint1": {
+      "min_position": -2.9,
+      "max_position": 2.9,
       "max_velocity": 2.0,
       "max_acceleration": 4.0
     }
@@ -27,7 +29,9 @@ Time must be strictly increasing.
 }
 ```
 
-Velocity or acceleration may be omitted when not being audited.
+Any of `min_position`/`max_position`/`max_velocity`/`max_acceleration` may be omitted when not being audited. `max_velocity`/`max_acceleration` are symmetric bounds on `|value|`; `min_position`/`max_position` are independent (most joint ranges are not symmetric around zero) and either may be given alone.
+
+A limit of `0.0` for `max_velocity`/`max_acceleration` is treated as "must stay at zero" (e.g. a locked joint) — any nonzero value is reported as a violation with `ratio = inf`, rather than raising a division error.
 
 ## Why positions are the input
 
