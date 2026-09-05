@@ -53,7 +53,8 @@ predictive-realizability/
 │   ├── moveit_export.py      # v0.2: JointTrajectory JSON -> this tool's CSV format
 │   ├── compare_stages.py     # v0.3: audit the same motion across pipeline stages
 │   ├── predictive_margin.py  # v0.4: receding-horizon warning time / lead time
-│   └── retime.py             # v0.5: uniform retiming, restores velocity/acceleration only
+│   ├── retime.py             # v0.5: uniform retiming, restores velocity/acceleration only
+│   └── plotting.py           # --plot: values vs. limits, matplotlib optional-only
 ├── examples/
 │   ├── limits.json
 │   ├── demo_trajectory.csv
@@ -69,7 +70,8 @@ predictive-realizability/
 │   ├── test_moveit_export.py
 │   ├── test_compare_stages.py
 │   ├── test_predictive_margin.py
-│   └── test_retime.py
+│   ├── test_retime.py
+│   └── test_plotting.py
 └── docs/
     ├── data_format.md
     ├── methodology.md
@@ -106,7 +108,19 @@ python -m realizability.analyzer \
   --output report.json
 ```
 
-The command prints a compact summary and writes a JSON report.
+The command prints a compact summary and writes a JSON report. Add `--plot report.png` for a
+plot of trajectory values against declared limits (needs `pip install -e ".[plot]"` for
+matplotlib — kept optional so the core audit path has no plotting dependency):
+
+```bash
+python -m pip install -e ".[plot]"
+python -m realizability.analyzer examples/moveit_capture/panda_goal1/trajectory_live.csv \
+  --limits examples/moveit_capture/panda_goal1/limits.json --plot report.png
+```
+
+Velocity and acceleration are plotted as a ratio (any number of joints, one shared 1.0 line);
+position — which has no single natural ratio for an asymmetric `[min, max]` bound — is plotted
+as the raw value with each joint's own limit lines.
 
 ## CSV format
 

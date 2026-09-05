@@ -133,6 +133,8 @@ def main():
     p.add_argument("csv")
     p.add_argument("--limits", required=True)
     p.add_argument("--output", default=None)
+    p.add_argument("--plot", default=None, metavar="PATH.png",
+                    help="Write a plot of trajectory values vs. declared limits (requires matplotlib)")
     args = p.parse_args()
 
     t, joints, q = load_csv(args.csv)
@@ -151,6 +153,17 @@ def main():
     if args.output:
         Path(args.output).write_text(json.dumps(report, indent=2))
         print(f"Wrote {args.output}")
+
+    if args.plot:
+        try:
+            from realizability.plotting import plot_report
+        except ImportError as e:
+            raise SystemExit(
+                "--plot requires matplotlib, which is not installed. "
+                "Install it with: pip install matplotlib"
+            ) from e
+        plot_report(t, joints, q, limits, args.plot)
+        print(f"Wrote {args.plot}")
 
 
 if __name__ == "__main__":
