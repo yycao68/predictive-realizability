@@ -25,6 +25,18 @@ def load_csv(path):
     return t, joints, q
 
 
+def compute_derivatives(t, q):
+    """Velocity and acceleration via numerical differentiation of position.
+
+    Shared by analyze() and predictive_margin.py so both differentiate the
+    same way -- np.gradient supports nonuniform sampling and is appropriate
+    for an offline audit. This is not a physical measurement.
+    """
+    v = np.gradient(q, t, axis=0)
+    a = np.gradient(v, t, axis=0)
+    return v, a
+
+
 def _bound_report(values, t, limit, prefix):
     """Peak-to-limit audit for one signal (velocity or acceleration) on one joint.
 
@@ -60,10 +72,7 @@ def analyze(t, joints, q, limits):
     if missing:
         raise ValueError(f"Missing limits for joints: {missing}")
 
-    # np.gradient supports nonuniform sampling and is appropriate for an
-    # offline audit. This is not a physical acceleration measurement.
-    v = np.gradient(q, t, axis=0)
-    a = np.gradient(v, t, axis=0)
+    v, a = compute_derivatives(t, q)
 
     report = {
         "samples": int(len(t)),

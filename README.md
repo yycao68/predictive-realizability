@@ -51,7 +51,8 @@ predictive-realizability/
 │   ├── __init__.py
 │   ├── analyzer.py
 │   ├── moveit_export.py      # v0.2: JointTrajectory JSON -> this tool's CSV format
-│   └── compare_stages.py     # v0.3: audit the same motion across pipeline stages
+│   ├── compare_stages.py     # v0.3: audit the same motion across pipeline stages
+│   └── predictive_margin.py  # v0.4: receding-horizon warning time / lead time
 ├── examples/
 │   ├── limits.json
 │   ├── demo_trajectory.csv
@@ -65,7 +66,8 @@ predictive-realizability/
 ├── tests/
 │   ├── test_analyzer.py
 │   ├── test_moveit_export.py
-│   └── test_compare_stages.py
+│   ├── test_compare_stages.py
+│   └── test_predictive_margin.py
 └── docs/
     ├── data_format.md
     ├── methodology.md
@@ -212,14 +214,29 @@ live                          0.731x              1.029x      FAIL
 Realizability lost at stage 'live' (the stage before it still passed).
 ```
 
-### v0.4
-Predictive margin:
+### v0.4 — done
+Predictive margin (`realizability.predictive_margin`), scoped honestly: this tool has no
+dynamics model or torque, so it cannot reproduce the Predictive Realizability paper's own
+$m_{\mathrm{phys}}$ certificate. What it *can* compute from a trajectory alone: since the
+full CSV represents an already-known plan, a receding-horizon scan over it — at each
+sample, look ahead over `[t, t+H]` using data already in the plan — is a legitimate
+predictive check. It reports the first warning time, the actual (unwindowed) violation
+time, and the resulting lead time.
 
-\[
-\hat m_{\mathrm{phys}}(t+H)
-\]
+```bash
+python -m realizability.predictive_margin examples/moveit_capture/panda_goal1/trajectory_live.csv \
+  --limits examples/moveit_capture/panda_goal1/limits.json --horizon 0.2
+```
+```text
+Horizon: 0.200 s over 289 samples
+First warning:    t=0.270s
+Actual violation: t=0.470s
+Lead time:        0.200s (predicted before it happened)
+```
 
-with an explicit warning horizon.
+On this real trajectory the lead time comes out equal to the horizon itself across a
+0.05–0.3s sweep — expected here because the acceleration approaches the limit
+monotonically in this window, not a general guarantee for every signal shape.
 
 ### v0.5
 Planner feedback / trajectory regeneration experiments.

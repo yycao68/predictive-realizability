@@ -9,8 +9,7 @@ The benchmark computes derivatives from a supplied trajectory representation:
 \hat a = \frac{d^2q}{dt^2}.
 \]
 
-These are trajectory-level quantities. They should not be described as measured
-physical acceleration.
+These are trajectory-level quantities. They should not be described as measured physical acceleration.
 
 ## 2. Constraint ratio
 
@@ -48,6 +47,15 @@ predictive certificate
 
 The first establishes the empirical gap; the second is the research contribution.
 
+`realizability.predictive_margin` (v0.4) is a first, deliberately narrow step toward the
+second, not a reproduction of it. It has no dynamics model, no torque, and no uncertainty
+bound, so it cannot compute the paper's own $m_{\mathrm{phys}}$ certificate. What it audits
+instead: since a trajectory CSV represents an already-known plan, scanning it with a
+receding look-ahead window (rather than over the whole trajectory at once) is a legitimate
+predictive check, and it reports the resulting warning time, actual violation time, and lead
+time. This is the empirical floor the real certificate would need to beat, not a stand-in
+for it.
+
 ## 4. Stage-wise auditing
 
 For a planning pipeline:
@@ -60,12 +68,8 @@ P3: controller reference
 P4: physical execution
 ```
 
-audit every available representation. A trajectory that passes at P1 but fails at
-P2 demonstrates that a downstream transformation changed its realizability.
+audit every available representation. A trajectory that passes at P1 but fails at P2 demonstrates that a downstream transformation changed its realizability.
 
 ## 5. Avoiding overclaim
 
-A failed audit does not automatically imply hardware damage, physical instability,
-controller failure, or universal software incorrectness. It establishes only that
-the evaluated trajectory representation exceeds the declared limit under the
-stated analysis method.
+A failed audit does not automatically imply hardware damage, physical instability, controller failure, or universal software incorrectness. It establishes only that the evaluated trajectory representation exceeds the declared limit under the stated analysis method.
