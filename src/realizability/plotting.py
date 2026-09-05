@@ -83,3 +83,26 @@ def plot_report(t, joints, q, limits, output_path):
     fig.tight_layout()
     fig.savefig(output_path, dpi=150)
     plt.close(fig)
+
+
+def plot_sensitivity_sweep(results, output_path):
+    """Peak velocity/acceleration ratio vs. sampling density (representation_sensitivity.py),
+    the plot form of docs/methodology.md's representation-sensitivity sweep."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    n_actual = [r["n_actual"] for r in results]
+    v_ratio = [r["report"]["overall"]["max_velocity_ratio"] for r in results]
+    a_ratio = [r["report"]["overall"]["max_acceleration_ratio"] for r in results]
+
+    fig, ax = plt.subplots(figsize=(7, 4.5))
+    ax.plot(n_actual, v_ratio, marker="o", label="velocity ratio")
+    ax.plot(n_actual, a_ratio, marker="o", label="acceleration ratio")
+    ax.axhline(1.0, color="red", linestyle="--", linewidth=1, label="declared limit")
+    ax.set_xlabel("sampling density (N actual samples)")
+    ax.set_ylabel("peak ratio")
+    ax.legend(fontsize="small")
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)

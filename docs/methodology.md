@@ -94,3 +94,18 @@ retiming ($1/\lambda^2$ and $1/\lambda$ respectively), but the gravity term $g(q
 only on position and does not shrink at all — a trajectory that is torque-infeasible because
 of gravity alone would remain torque-infeasible no matter how much it is slowed down. This is
 anticipated future work (a dynamics-aware audit), not a claim this tool currently checks.
+
+## 7. Representation sensitivity
+
+An audit's PASS/FAIL verdict depends on the trajectory representation it is given, not only
+on the underlying physical motion. `examples/moveit_capture/panda_goal1`'s planned export (10
+waypoints) and live capture (289 samples) are the same plan, audited differently, but the
+obvious objection is that comparing two arbitrarily different sample counts proves nothing on
+its own. `realizability.representation_sensitivity` (v0.6) answers this by holding one
+trajectory fixed and uniformly subsampling it across a swept density range instead: on the
+real goal1 live capture, the verdict crosses PASS→FAIL between N=20 and N=50 samples, and the
+peak ratio converges monotonically toward the full-density value as N increases — a measured
+threshold, not an artifact of comparing two unrelated captures. This is deliberately scoped:
+it characterizes one simple, common sparsification strategy (uniform subsampling of a known
+signal), not a claim that it reproduces what a time-optimal parameterizer's own non-uniform
+waypoint placement would do at the same count.

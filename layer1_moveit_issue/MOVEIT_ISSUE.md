@@ -29,9 +29,11 @@ MoveIt 2 already has public reports concerning acceleration/scaling-limit behavi
 - moveit/moveit2#3778: commanded Panda accelerations reported above the declared `max_acceleration`.
 - moveit/moveit2#3779: requested acceleration scaling not fully reflected in commanded acceleration.
 
-These reports should be treated as evidence of concrete cases, not as evidence that every MoveIt/TOTG trajectory violates limits. Both are single-reporter, single-fuzzing-run reports with no maintainer engagement yet (zero comments, OPEN) as of this check — an independent reproduction of #3778's core claim is below, so this issue is not solely relying on trusting that report.
+These reports should be treated as evidence of concrete cases, not as evidence that every MoveIt/TOTG trajectory violates limits. Both are single-reporter, single-fuzzing-run reports with no maintainer engagement yet (zero comments, OPEN) as of this check — an independent reproduction of the reported phenomenon is below, so this issue is not solely relying on trusting that report.
 
-### Independent reproduction of #3778 (2026-09-04)
+### Independent reproduction of the reported phenomenon (2026-09-04)
+
+(Not a reproduction of #3778 itself in the strict sense — the exact path, seed, and environment differ, and RRTConnect is randomized, so this is evidence the underlying phenomenon reproduces on a fresh build, not a byte-for-byte replay of that issue's own run.)
 
 Fresh `osrf/ros:jazzy-desktop` container, `ros-jazzy-moveit-resources-panda-moveit-config` 3.1.0 unmodified, `demo.launch.py` with `mock_components`. Sent #3778's own 5-goal Cartesian sequence ("frame 1782355872") via `moveit_py`, OMPL RRTConnect default config, `max_acceleration_scaling_factor=0.941`, recording peak `|reference.accelerations|` (this controller version's field name; #3778 calls it `desired.accelerations`) from `/panda_arm_controller/controller_state`. Confirmed the declared limits match #3778's table exactly, and confirmed only `AddTimeOptimalParameterization` (TOTG) is configured in this pipeline — no TOPP-RA adapter exists in this package's default pipelines, so "TOTG/TOPP-RA" in #3778/#3779's titles is TOTG on this setup.
 
@@ -75,6 +77,23 @@ ratio look misleadingly close to a real audit. **A raw planned-trajectory export
 not on its own sufficient evidence that a trajectory is realizable** — the live, densely
 sampled controller reference (or an equivalent fine resampling of the plan) is needed to
 surface a violation like this one.
+
+**Is this just an artifact of comparing two arbitrarily different sample counts (10 vs.
+289)?** Measured directly rather than argued: uniformly subsampling the live capture alone
+(holding the underlying motion fixed, varying only sampling density) shows a real PASS→FAIL
+threshold between N=20 and N=50 samples, converging monotonically toward the full-density
+verdict as N increases —
+
+```text
+N (actual)   peak acceleration ratio   audit
+        10                     0.941     PASS
+        20                     0.949     PASS
+        50                     1.017     FAIL
+        84 (full)              1.029     FAIL
+```
+
+— not noise, and not specific to the particular 10-vs-289 comparison above. See
+[`examples/moveit_capture/panda_goal1/representation_sensitivity.png`](https://github.com/yycao68/predictive-realizability/blob/main/examples/moveit_capture/panda_goal1/representation_sensitivity.png).
 
 **Update (2026-09-05), addressing questions raised in review of this data:** the live
 capture's reported total duration (2.880 s) is noticeably longer than the planned
