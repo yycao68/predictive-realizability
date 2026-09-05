@@ -1,9 +1,6 @@
 # Scenario 02 — acceleration violation only
 
-`q(t) = (A/ω)·t − (A/ω²)·sin(ωt)` with `A = 6.0 rad/s²`, `ω = 2π·2 rad/s` — a sinusoidal
-acceleration profile at high enough frequency that velocity and position stay small while
-acceleration alone breaches its limit. Isolates the acceleration check: position and velocity
-limits are set generously wide so only acceleration can fail.
+`q(t) = (A/ω)·t − (A/ω²)·sin(ωt)` with `A = 6.0 rad/s²`, `ω = 2π·2 rad/s` — a sinusoidal acceleration profile at high enough frequency that velocity and position stay small while acceleration alone breaches its limit. Isolates the acceleration check: position and velocity limits are set generously wide so only acceleration can fail.
 
 | check | peak | limit | ratio |
 |---|---|---|---|

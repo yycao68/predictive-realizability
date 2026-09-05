@@ -1,8 +1,6 @@
 # Scenario 03 — velocity violation only
 
-A minimum-jerk profile (distance 1.0 rad over 1.0 s) audited against a velocity limit
-(1.5 rad/s) tighter than its natural peak velocity (1.875 rad/s), while position and
-acceleration limits are set generously wide. Isolates the velocity check.
+A minimum-jerk profile (distance 1.0 rad over 1.0 s) audited against a velocity limit (1.5 rad/s) tighter than its natural peak velocity (1.875 rad/s), while position and acceleration limits are set generously wide. Isolates the velocity check.
 
 | check | peak | limit | ratio |
 |---|---|---|---|
