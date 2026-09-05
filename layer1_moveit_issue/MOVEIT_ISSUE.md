@@ -49,6 +49,33 @@ Ran 3 times (RRTConnect is randomized — each run takes a different geometric p
 
 Every one of the 3 runs violated the declared limit on at least one joint. None reached #3778's reported 2.75× worst case — expected, since these runs reuse the goal poses but not the exact path.
 
+### A versioned real capture, and why the *planned* trajectory alone is not enough (2026-09-04)
+
+The reproduction above sampled peak ratios live; the benchmark repository now also ships the
+actual exported trajectory data for one specific plan (goal 1 above), so the claim is
+independently checkable rather than resting on a summary table —
+[`examples/moveit_capture/panda_goal1/`](https://github.com/yycao68/predictive-realizability/tree/main/examples/moveit_capture/panda_goal1).
+
+Two exports of the *same* plan disagree, and the reason is specific and worth stating
+precisely. The raw planned `trajectory_msgs/msg/JointTrajectory` from `arm.plan()`'s result —
+only 10 sparse waypoints, since TOTG parameterizes OMPL's own sparse path rather than
+resampling to a fixed time grid — audits as **PASS** (peak acceleration ratio 0.941). The
+controller's own live `reference` stream for the identical plan, sampled at its real publish
+rate during execution (289 samples), audits as **FAIL**: `panda_joint7` reaches ratio
+**1.029**.
+
+This is not sampling noise. The planned export's own embedded `accelerations` field for
+`panda_joint7` is exactly bang-bang — `-4.705` rad/s² for the first 5 waypoints, `+4.705` for
+the last 5, switching sign at the profile's midpoint — consistent with TOTG's time-optimal
+parameterization. Differentiating only 10 unevenly-spaced position waypoints straddles that
+discontinuity and smooths it out (largest single-point discrepancy: 4.10 rad/s² against the
+4.705 rad/s² signal itself), even though the two waypoints immediately flanking the switch
+happen to recover the correct peak, which is what makes the planned export's *aggregate*
+ratio look misleadingly close to a real audit. **A raw planned-trajectory export is therefore
+not on its own sufficient evidence that a trajectory is realizable** — the live, densely
+sampled controller reference (or an equivalent fine resampling of the plan) is needed to
+surface a violation like this one.
+
 ## Reproducibility protocol
 
 For a rigorous report, please record:
