@@ -67,3 +67,42 @@ def test_position_limit_violation_detected():
     report = analyze(t, joints, q, limits)
     assert report["joints"]["joint1"]["position_violation"]
     assert not report["overall"]["realizability_audit_pass"]
+
+
+def _load_scenario(name):
+    d = ROOT / "examples/scenarios" / name
+    t, joints, q = load_csv(d / "trajectory.csv")
+    limits = json.loads((d / "limits.json").read_text())
+    return analyze(t, joints, q, limits)
+
+
+def test_scenario_01_pass():
+    report = _load_scenario("01_pass")
+    assert report["overall"]["realizability_audit_pass"]
+
+
+def test_scenario_02_isolates_acceleration_violation():
+    report = _load_scenario("02_acceleration_violation")
+    j = report["joints"]["joint1"]
+    assert j["acceleration_violation"]
+    assert not j["velocity_violation"]
+    assert not j["position_violation"]
+    assert not report["overall"]["realizability_audit_pass"]
+
+
+def test_scenario_03_isolates_velocity_violation():
+    report = _load_scenario("03_velocity_violation")
+    j = report["joints"]["joint1"]
+    assert j["velocity_violation"]
+    assert not j["acceleration_violation"]
+    assert not j["position_violation"]
+    assert not report["overall"]["realizability_audit_pass"]
+
+
+def test_scenario_04_isolates_position_violation():
+    report = _load_scenario("04_position_violation")
+    j = report["joints"]["joint1"]
+    assert j["position_violation"]
+    assert not j["velocity_violation"]
+    assert not j["acceleration_violation"]
+    assert not report["overall"]["realizability_audit_pass"]

@@ -52,12 +52,40 @@ predictive-realizability/
 │   └── analyzer.py
 ├── examples/
 │   ├── limits.json
-│   └── demo_trajectory.csv
+│   ├── demo_trajectory.csv
+│   └── scenarios/            # one worked example per check, each isolating a single violation
+│       ├── 01_pass/
+│       ├── 02_acceleration_violation/
+│       ├── 03_velocity_violation/
+│       └── 04_position_violation/
 ├── tests/
 │   └── test_analyzer.py
 └── docs/
     ├── data_format.md
-    └── methodology.md
+    ├── methodology.md
+    └── release_checklist.md
+```
+
+## Worked examples
+
+`examples/scenarios/` has four synthetic single-joint trajectories, each with its own
+`trajectory.csv`, `limits.json`, and a short `README.md` explaining the construction and
+expected result:
+
+| scenario | isolates | audit |
+|---|---|---|
+| `01_pass` | nothing (baseline) | PASS |
+| `02_acceleration_violation` | acceleration only | FAIL |
+| `03_velocity_violation` | velocity only | FAIL |
+| `04_position_violation` | position only | FAIL |
+
+Each is deliberately synthetic (not a real MoveIt export — see the roadmap's v0.2) and each
+limits.json is tuned so only the named check can fail; the other two stay comfortably within
+bounds. Run any of them directly:
+
+```bash
+python -m realizability.analyzer examples/scenarios/02_acceleration_violation/trajectory.csv \
+  --limits examples/scenarios/02_acceleration_violation/limits.json
 ```
 
 ## Quick start
