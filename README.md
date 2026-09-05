@@ -49,17 +49,21 @@ predictive-realizability/
 │   └── MOVEIT_ISSUE.md
 ├── src/realizability/
 │   ├── __init__.py
-│   └── analyzer.py
+│   ├── analyzer.py
+│   └── moveit_export.py      # v0.2: JointTrajectory JSON -> this tool's CSV format
 ├── examples/
 │   ├── limits.json
 │   ├── demo_trajectory.csv
-│   └── scenarios/            # one worked example per check, each isolating a single violation
-│       ├── 01_pass/
-│       ├── 02_acceleration_violation/
-│       ├── 03_velocity_violation/
-│       └── 04_position_violation/
+│   ├── scenarios/             # one worked example per check, each isolating a single violation
+│   │   ├── 01_pass/
+│   │   ├── 02_acceleration_violation/
+│   │   ├── 03_velocity_violation/
+│   │   └── 04_position_violation/
+│   └── moveit_capture/        # a real (non-synthetic) MoveIt 2 capture, see its own README
+│       └── panda_goal1/
 ├── tests/
-│   └── test_analyzer.py
+│   ├── test_analyzer.py
+│   └── test_moveit_export.py
 └── docs/
     ├── data_format.md
     ├── methodology.md
@@ -79,9 +83,7 @@ expected result:
 | `03_velocity_violation` | velocity only | FAIL |
 | `04_position_violation` | position only | FAIL |
 
-Each is deliberately synthetic (not a real MoveIt export — see the roadmap's v0.2) and each
-limits.json is tuned so only the named check can fail; the other two stay comfortably within
-bounds. Run any of them directly:
+Each is deliberately synthetic (not a real MoveIt export — see the roadmap's v0.2) and each limits.json is tuned so only the named check can fail; the other two stay comfortably within bounds. Run any of them directly:
 
 ```bash
 python -m realizability.analyzer examples/scenarios/02_acceleration_violation/trajectory.csv \
@@ -171,8 +173,21 @@ Every published benchmark result should record:
 ### v0.1
 Offline trajectory auditing.
 
-### v0.2
-MoveIt 2 export helper.
+### v0.2 — done
+MoveIt 2 export helper (`realizability.moveit_export`): converts a JSON-decoded
+`trajectory_msgs/msg/JointTrajectory` (or a `RobotTrajectory` wrapping one) into this tool's
+CSV format, no ROS install required for the conversion itself. Validated against a real
+capture, not just synthetic fixtures — see `examples/moveit_capture/panda_goal1/`, which also
+documents a real methodological finding: a raw *planned* trajectory's sparse waypoints can
+under-represent a bang-bang-type acceleration profile under numerical differentiation, while
+the live controller reference stream (densely sampled) reproduces the real violation.
+
+```bash
+python -m realizability.moveit_export examples/moveit_capture/panda_goal1/raw_export_live.json \
+  --output /tmp/trajectory.csv
+python -m realizability.analyzer /tmp/trajectory.csv \
+  --limits examples/moveit_capture/panda_goal1/limits.json
+```
 
 ### v0.3
 Trajectory-stage comparison:

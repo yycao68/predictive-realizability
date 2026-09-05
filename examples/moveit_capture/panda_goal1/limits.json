@@ -1,0 +1,11 @@
+{
+  "joints": {
+    "panda_joint1": {"max_velocity": 2.175, "max_acceleration": 3.75},
+    "panda_joint2": {"max_velocity": 2.175, "max_acceleration": 1.875},
+    "panda_joint3": {"max_velocity": 2.175, "max_acceleration": 2.5},
+    "panda_joint4": {"max_velocity": 2.175, "max_acceleration": 3.125},
+    "panda_joint5": {"max_velocity": 2.61, "max_acceleration": 3.75},
+    "panda_joint6": {"max_velocity": 2.61, "max_acceleration": 5.0},
+    "panda_joint7": {"max_velocity": 2.61, "max_acceleration": 5.0}
+  }
+}
