@@ -71,12 +71,39 @@ directly: the planned export's acceleration-ratio panel dips toward zero right a
 the under-sampling described above — while the live capture's panel clearly crosses the 1.0
 line on `panda_joint7` around `t=0.47s`.
 
+## Is this just a 10-vs-289-samples artifact?
+
+Comparing two arbitrarily different captures at different densities doesn't rule that out on
+its own. `representation_sensitivity.py` does: it takes `trajectory_live.csv` alone and
+uniformly subsamples it at a swept density range, so the underlying motion is held fixed and
+only sampling density changes. Result (`representation_sensitivity.json`,
+`representation_sensitivity.png`):
+
+```text
+Active-motion window: 84 samples, 0.830s
+N (target)  N (actual)   peak velocity   peak acceleration     audit
+        10          10          0.648x              0.941x      PASS
+        20          20          0.694x              0.949x      PASS
+        50          50          0.730x              1.017x      FAIL
+        84          84          0.731x              1.029x      FAIL
+
+Verdict changes between: [(20, 50)]
+```
+
+A real PASS→FAIL threshold between N=20 and N=50, converging monotonically toward the full
+84-sample value — not noise, and not an artifact of the specific 10-vs-289 comparison above
+(this sweeps one trajectory, not two different captures).
+
 ## Reproduce
 
 ```bash
 python -m realizability.moveit_export examples/moveit_capture/panda_goal1/raw_export_live.json \
   --output /tmp/trajectory_live.csv
 python -m realizability.analyzer /tmp/trajectory_live.csv \
+  --limits examples/moveit_capture/panda_goal1/limits.json
+
+python -m realizability.representation_sensitivity \
+  examples/moveit_capture/panda_goal1/trajectory_live.csv \
   --limits examples/moveit_capture/panda_goal1/limits.json
 ```
 

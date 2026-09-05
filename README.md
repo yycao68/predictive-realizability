@@ -1,6 +1,6 @@
 # Predictive Realizability Benchmark
 
-A small, implementation-independent benchmark for testing whether a planned or time-parameterized joint trajectory remains within its declared physical limits.
+A small, implementation-independent benchmark for testing whether a planned or time-parameterized joint trajectory remains within its declared kinematic limits (position, velocity, acceleration) — not a torque, actuator, contact, or thermal model.
 
 ## Motivation
 
@@ -54,7 +54,8 @@ predictive-realizability/
 │   ├── compare_stages.py     # v0.3: audit the same motion across pipeline stages
 │   ├── lookahead_margin.py   # v0.4: receding-horizon warning time / lead time
 │   ├── retime.py             # v0.5: uniform retiming, restores velocity/acceleration only
-│   └── plotting.py           # --plot: values vs. limits, matplotlib optional-only
+│   ├── plotting.py           # --plot: values vs. limits, matplotlib optional-only
+│   └── representation_sensitivity.py  # is a verdict a sampling-density artifact?
 ├── examples/
 │   ├── limits.json
 │   ├── demo_trajectory.csv
@@ -71,7 +72,8 @@ predictive-realizability/
 │   ├── test_compare_stages.py
 │   ├── test_lookahead_margin.py
 │   ├── test_retime.py
-│   └── test_plotting.py
+│   ├── test_plotting.py
+│   └── test_representation_sensitivity.py
 └── docs/
     ├── data_format.md
     ├── methodology.md
@@ -172,6 +174,37 @@ realizability audit
 ```
 
 This is the empirical foundation for the broader Predictive Realizability framework.
+
+## Is the planned-vs-live finding just a sampling-density artifact?
+
+`examples/moveit_capture/panda_goal1`'s planned export (10 waypoints) audits PASS; the live
+controller reference (289 samples, same plan) audits FAIL. The obvious objection: is that
+just an artifact of comparing two arbitrarily different sample counts, rather than a real
+representation-dependent finding? Measured directly, not argued: `representation_sensitivity.py`
+takes the live capture alone and uniformly subsamples it at a swept range of densities, so the
+underlying motion is held fixed and only the sampling density changes.
+
+```bash
+python -m realizability.representation_sensitivity \
+  examples/moveit_capture/panda_goal1/trajectory_live.csv \
+  --limits examples/moveit_capture/panda_goal1/limits.json
+```
+```text
+Active-motion window: 84 samples, 0.830s
+N (target)  N (actual)   peak velocity   peak acceleration     audit
+        10          10          0.648x              0.941x      PASS
+        20          20          0.694x              0.949x      PASS
+        50          50          0.730x              1.017x      FAIL
+        84          84          0.731x              1.029x      FAIL
+
+Verdict changes between: [(20, 50)]
+```
+
+The verdict crosses PASS→FAIL between N=20 and N=50, converging monotonically toward the full
+84-sample value as density increases — a real threshold, not noise. (Not a claim that uniform
+subsampling reproduces TOTG's own bang-bang-optimal waypoint placement at a given count — it
+answers the narrower question of how detection degrades under this one simple, common
+sparsification strategy, holding the true motion fixed.)
 
 ## Reproducibility policy
 
@@ -279,6 +312,13 @@ On the real goal1 acceleration violation, a **1.46% slowdown** is enough to full
 On a position violation (`examples/scenarios/04_position_violation`), retiming correctly
 reports nothing it can do — `position_violation_remains: true`, `fully_restored: false` —
 rather than silently claiming success.
+
+### v0.6 — done
+Representation-sensitivity sweep (`realizability.representation_sensitivity`) — see
+"Is the planned-vs-live finding just a sampling-density artifact?" above. Turns the
+planned-vs-live anecdote into a measured sweep over one held-fixed trajectory, showing a
+real PASS→FAIL threshold between N=20 and N=50 samples, not an artifact of comparing two
+arbitrarily different captures.
 
 ## Citation
 
