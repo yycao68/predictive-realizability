@@ -22,6 +22,10 @@ def test_realizability_lost_between_stages_real_capture():
     summary = summarize(results)
     assert summary["first_failure"] == "live"
     assert not summary["pass_through_all"]
+    assert len(summary["margin_deltas"]) == 1
+    delta = summary["margin_deltas"][0]
+    assert delta["from"] == "planned" and delta["to"] == "live"
+    assert delta["acceleration_margin_delta"] < 0  # margin got worse, not just PASS->FAIL
 
 
 def test_pass_through_all_stages():
@@ -45,3 +49,11 @@ def test_first_stage_already_fails_has_no_upstream_to_blame():
     summary = summarize(results)
     assert summary["first_failure"] == "only_stage"
     assert not summary["pass_through_all"]
+
+
+def test_single_stage_has_no_margin_deltas():
+    d = _scenario_path("01_pass")
+    limits = json.loads((d / "limits.json").read_text())
+    results = compare([("only", d / "trajectory.csv")], limits)
+    summary = summarize(results)
+    assert summary["margin_deltas"] == []

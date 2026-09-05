@@ -106,3 +106,26 @@ def test_scenario_04_isolates_position_violation():
     assert not j["velocity_violation"]
     assert not j["acceleration_violation"]
     assert not report["overall"]["realizability_audit_pass"]
+
+
+def test_active_duration_excludes_trailing_idle_time():
+    # A trajectory that moves for 0.5s then holds still for another 1.0s --
+    # active_duration_s should reflect the real motion, not the full capture.
+    t = np.concatenate([np.linspace(0, 0.5, 51), np.linspace(0.51, 1.5, 100)])
+    moving_part = np.linspace(0, 1.0, 51)
+    held_part = np.full(100, 1.0)
+    q = np.column_stack([np.concatenate([moving_part, held_part])])
+    joints = ["joint1"]
+    limits = {"joints": {"joint1": {"max_velocity": 10.0}}}  # generous, not the point of this test
+    report = analyze(t, joints, q, limits)
+    assert report["duration_s"] > 1.4
+    assert abs(report["active_duration_s"] - 0.5) < 0.02
+    assert report["trailing_idle_s"] > 0.9
+    assert report["leading_idle_s"] < 0.02
+
+
+def test_acceleration_source_is_labeled_numerical():
+    d = ROOT / "examples/scenarios/01_pass"
+    report = _load_scenario("01_pass")
+    assert report["velocity_source"] == "numerical_derivative"
+    assert report["acceleration_source"] == "numerical_derivative"

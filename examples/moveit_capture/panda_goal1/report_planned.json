@@ -1,6 +1,9 @@
 {
   "samples": 10,
   "duration_s": 0.826407,
+  "active_duration_s": 0.826407,
+  "leading_idle_s": 0.0,
+  "trailing_idle_s": 0.0,
   "joints": {
     "panda_joint1": {
       "peak_velocity": 0.4183051050000001,
@@ -120,5 +123,7 @@
     "max_acceleration_ratio": 0.9410000060227286,
     "position_violation": false,
     "realizability_audit_pass": true
-  }
+  },
+  "velocity_source": "numerical_derivative",
+  "acceleration_source": "numerical_derivative"
 }

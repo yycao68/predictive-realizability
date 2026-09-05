@@ -28,7 +28,7 @@ def load_csv(path):
 def compute_derivatives(t, q):
     """Velocity and acceleration via numerical differentiation of position.
 
-    Shared by analyze() and predictive_margin.py so both differentiate the
+    Shared by analyze() and lookahead_margin.py so both differentiate the
     same way -- np.gradient supports nonuniform sampling and is appropriate
     for an offline audit. This is not a physical measurement.
     """
@@ -67,16 +67,37 @@ def _bound_report(values, t, limit, prefix):
     }
 
 
+def _active_span(t, q, tol=1e-6):
+    """The [start, end] time span over which any joint's position actually
+    changes between consecutive samples, distinct from the full recorded
+    duration -- a capture can include leading/trailing idle time (e.g. a
+    robot holding its final pose after motion ends) that inflates
+    duration_s without reflecting real motion. Returns (start, end,
+    leading_idle_s, trailing_idle_s); if nothing moves at all, the span
+    collapses to a single instant at t[0].
+    """
+    moving = np.max(np.abs(np.diff(q, axis=0)), axis=1) > tol
+    if not np.any(moving):
+        return float(t[0]), float(t[0]), 0.0, float(t[-1] - t[0])
+    first, last = np.flatnonzero(moving)[0], np.flatnonzero(moving)[-1]
+    start, end = float(t[first]), float(t[last + 1])
+    return start, end, start - float(t[0]), float(t[-1]) - end
+
+
 def analyze(t, joints, q, limits):
     missing = [j for j in joints if j not in limits["joints"]]
     if missing:
         raise ValueError(f"Missing limits for joints: {missing}")
 
     v, a = compute_derivatives(t, q)
+    active_start, active_end, leading_idle_s, trailing_idle_s = _active_span(t, q)
 
     report = {
         "samples": int(len(t)),
         "duration_s": float(t[-1] - t[0]),
+        "active_duration_s": active_end - active_start,
+        "leading_idle_s": leading_idle_s,
+        "trailing_idle_s": trailing_idle_s,
         "joints": {},
     }
 
@@ -125,6 +146,8 @@ def analyze(t, joints, q, limits):
         and report["overall"]["max_acceleration_ratio"] <= 1.0
         and not report["overall"]["position_violation"]
     )
+    report["velocity_source"] = "numerical_derivative"
+    report["acceleration_source"] = "numerical_derivative"
     return report
 
 
@@ -141,7 +164,11 @@ def main():
     report = analyze(t, joints, q, limits)
 
     print(f"Samples: {report['samples']}")
-    print(f"Duration: {report['duration_s']:.6f} s")
+    print(f"Duration: {report['duration_s']:.6f} s "
+          f"(active motion: {report['active_duration_s']:.6f} s"
+          + (f", leading idle: {report['leading_idle_s']:.3f} s" if report["leading_idle_s"] > 0.001 else "")
+          + (f", trailing idle: {report['trailing_idle_s']:.3f} s" if report["trailing_idle_s"] > 0.001 else "")
+          + ")")
     print(f"Peak velocity ratio: {report['overall']['max_velocity_ratio']:.6f}")
     print(f"Peak acceleration ratio: {report['overall']['max_acceleration_ratio']:.6f}")
     if report["overall"]["position_violation"]:

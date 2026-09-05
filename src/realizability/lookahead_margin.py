@@ -1,17 +1,18 @@
-"""A receding-horizon predictive margin over an already-known trajectory.
+"""A receding-horizon look-ahead margin over an already-known trajectory.
 
-Scope, stated precisely: this tool only has kinematic trajectory data
-(position, and derived velocity/acceleration) -- no dynamics model, no
-torque, no uncertainty bound. It cannot reproduce the Predictive
-Realizability paper's own m_phys certificate, which is defined over
-predicted torque with an explicit uncertainty term. What it CAN honestly
-compute from a CSV alone: since the full trajectory represents an
-already-known plan (its "future" samples exist in the file before any
-execution reaches them), a receding-horizon scan over that plan is a
-legitimate predictive check -- at sample k, it looks ahead over
-[t_k, t_k+horizon] using data already available in the plan, exactly what
-an online monitor with access to the upcoming plan (not the future
-execution) could compute in real time.
+Deliberately NOT named "predictive margin" or "predictive realizability":
+this tool only has kinematic trajectory data (position, and derived
+velocity/acceleration) -- no dynamics model, no torque, no uncertainty
+bound. It cannot reproduce the Predictive Realizability paper's own m_phys
+certificate, which is defined over predicted torque with an explicit
+uncertainty term, and that name is reserved for that future dynamics-aware
+implementation, not this one. What this module CAN honestly compute from a
+CSV alone: since the full trajectory represents an already-known plan (its
+"future" samples exist in the file before any execution reaches them), a
+receding-horizon scan over that plan is a legitimate look-ahead check -- at
+sample k, it looks ahead over [t_k, t_k+horizon] using data already
+available in the plan, exactly what an online monitor with access to the
+upcoming plan (not the future execution) could compute in real time.
 
 This produces two things a post-hoc audit (analyzer.py) does not:
 - a warning time: the first t_k at which the look-ahead window itself
@@ -40,7 +41,7 @@ def _window_worst_ratio(signal_col, limit):
     return float("inf") if peak > 0.0 else 0.0
 
 
-def predictive_margin(t, joints, q, limits, horizon_s):
+def lookahead_margin(t, joints, q, limits, horizon_s):
     """Returns a dict with a per-sample warning-ratio time series and the
     warning/actual/lead-time summary, for the worst joint/signal combined.
     """
@@ -100,7 +101,7 @@ def predictive_margin(t, joints, q, limits, horizon_s):
 
 def main():
     p = argparse.ArgumentParser(
-        description="Receding-horizon predictive margin over an already-known trajectory."
+        description="Receding-horizon look-ahead margin over an already-known trajectory."
     )
     p.add_argument("csv")
     p.add_argument("--limits", required=True)
@@ -110,7 +111,7 @@ def main():
 
     t, joints, q = load_csv(args.csv)
     limits = json.loads(Path(args.limits).read_text())
-    result = predictive_margin(t, joints, q, limits, args.horizon)
+    result = lookahead_margin(t, joints, q, limits, args.horizon)
 
     print(f"Horizon: {args.horizon:.3f} s over {result['samples']} samples")
     if result["t_actual_violation_s"] is None:
