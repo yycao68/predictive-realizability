@@ -25,9 +25,20 @@ waypoints; it does not resample to a fixed time grid). Audited: **PASS** (peak a
 ratio 0.941, on `panda_joint7`).
 
 **`raw_export_live.json` / `trajectory_live.csv`** — the controller's own live `reference`
-stream, sampled at its real publish rate during actual execution (**289 samples** over 2.88 s,
+stream, sampled at its real publish rate during actual execution (**289 samples**,
 `/panda_arm_controller/controller_state`). Audited: **FAIL** — `panda_joint7` reaches ratio
-**1.029**, a real violation the sparse planned export does not show at all.
+**1.029**, a violation the sparse planned export does not show at all. This is a violation of
+the *commanded reference trajectory* under this tool's audit, not a physical measurement of
+the robot (see "Important distinction" in `layer1_moveit_issue/MOVEIT_ISSUE.md`).
+
+**On the 0.826s vs. 2.880s duration** — these are not two different executions of different
+length; the capture script recorded ~2.05s of trailing idle time (the robot holding its final
+pose) after motion completed, deliberately, to catch trailing controller-state samples. The
+active *motion* itself spans 0.830s (`active_duration_s` in the report, added specifically
+because a total-duration figure alone made this comparison look like a timing discrepancy
+rather than the same plan) — matching the planned trajectory's 0.826s to within 0.5%, as it
+should for the same underlying plan. The reported violation at `t≈0.470s` sits well inside
+that real motion window, not in the idle tail.
 
 This is not a bug in the analyzer — it is a genuine, reportable methodological finding from
 using real data, and it is more specific than "sparse sampling misses peaks in general."
@@ -47,7 +58,8 @@ the artifact that actually surfaces the violation here.
 
 | | planned (10 pts) | live reference (289 pts) |
 |---|---|---|
-| duration | 0.826 s | 2.880 s |
+| total recorded duration | 0.826 s | 2.880 s |
+| active motion duration | 0.826 s | 0.830 s |
 | peak velocity ratio | 0.653 | 0.731 |
 | peak acceleration ratio | 0.941 | **1.029 (violation, `panda_joint7`)** |
 

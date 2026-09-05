@@ -47,14 +47,15 @@ predictive certificate
 
 The first establishes the empirical gap; the second is the research contribution.
 
-`realizability.predictive_margin` (v0.4) is a first, deliberately narrow step toward the
-second, not a reproduction of it. It has no dynamics model, no torque, and no uncertainty
-bound, so it cannot compute the paper's own $m_{\mathrm{phys}}$ certificate. What it audits
-instead: since a trajectory CSV represents an already-known plan, scanning it with a
-receding look-ahead window (rather than over the whole trajectory at once) is a legitimate
-predictive check, and it reports the resulting warning time, actual violation time, and lead
-time. This is the empirical floor the real certificate would need to beat, not a stand-in
-for it.
+`realizability.lookahead_margin` (v0.4) is a first, deliberately narrow step toward the
+second, not a reproduction of it — named "look-ahead," not "predictive," specifically to
+keep that name free for the real dynamics-aware certificate rather than implying this module
+already is one. It has no dynamics model, no torque, and no uncertainty bound, so it cannot
+compute the paper's own $m_{\mathrm{phys}}$ certificate. What it audits instead: since a
+trajectory CSV represents an already-known plan, scanning it with a receding look-ahead
+window (rather than over the whole trajectory at once) is a legitimate look-ahead check, and
+it reports the resulting warning time, actual violation time, and lead time. This is the
+empirical floor the real certificate would need to beat, not a stand-in for it.
 
 ## 4. Stage-wise auditing
 
@@ -85,3 +86,11 @@ last fact is a real, load-bearing limitation, not an implementation gap to fill 
 retiming provably cannot restore a position-limit violation, because position never changes
 under pure time-dilation. `retime.py` reports this explicitly (`position_violation_remains`)
 rather than treating "audit still fails after retiming" as a bug.
+
+A second, deeper limitation this tool cannot even represent yet, since it has no torque at
+all: retiming only helps a *kinematic* violation. In the manipulator equation
+$\tau = M(q)\ddot q + C(q,\dot q)\dot q + g(q)$, the inertial and Coriolis terms shrink under
+retiming ($1/\lambda^2$ and $1/\lambda$ respectively), but the gravity term $g(q)$ depends
+only on position and does not shrink at all — a trajectory that is torque-infeasible because
+of gravity alone would remain torque-infeasible no matter how much it is slowed down. This is
+anticipated future work (a dynamics-aware audit), not a claim this tool currently checks.

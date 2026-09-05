@@ -52,7 +52,7 @@ predictive-realizability/
 │   ├── analyzer.py
 │   ├── moveit_export.py      # v0.2: JointTrajectory JSON -> this tool's CSV format
 │   ├── compare_stages.py     # v0.3: audit the same motion across pipeline stages
-│   ├── predictive_margin.py  # v0.4: receding-horizon warning time / lead time
+│   ├── lookahead_margin.py   # v0.4: receding-horizon warning time / lead time
 │   ├── retime.py             # v0.5: uniform retiming, restores velocity/acceleration only
 │   └── plotting.py           # --plot: values vs. limits, matplotlib optional-only
 ├── examples/
@@ -69,7 +69,7 @@ predictive-realizability/
 │   ├── test_analyzer.py
 │   ├── test_moveit_export.py
 │   ├── test_compare_stages.py
-│   ├── test_predictive_margin.py
+│   ├── test_lookahead_margin.py
 │   ├── test_retime.py
 │   └── test_plotting.py
 └── docs/
@@ -231,16 +231,17 @@ Realizability lost at stage 'live' (the stage before it still passed).
 ```
 
 ### v0.4 — done
-Predictive margin (`realizability.predictive_margin`), scoped honestly: this tool has no
-dynamics model or torque, so it cannot reproduce the Predictive Realizability paper's own
-$m_{\mathrm{phys}}$ certificate. What it *can* compute from a trajectory alone: since the
-full CSV represents an already-known plan, a receding-horizon scan over it — at each
-sample, look ahead over `[t, t+H]` using data already in the plan — is a legitimate
-predictive check. It reports the first warning time, the actual (unwindowed) violation
-time, and the resulting lead time.
+Look-ahead margin (`realizability.lookahead_margin`) — deliberately not named "predictive
+margin": this tool has no dynamics model or torque, so it cannot reproduce the Predictive
+Realizability paper's own $m_{\mathrm{phys}}$ certificate, and that name is kept free for
+that future implementation rather than implied by this one. What it *can* compute from a
+trajectory alone: since the full CSV represents an already-known plan, a receding-horizon
+scan over it — at each sample, look ahead over `[t, t+H]` using data already in the plan —
+is a legitimate look-ahead check. It reports the first warning time, the actual (unwindowed)
+violation time, and the resulting lead time.
 
 ```bash
-python -m realizability.predictive_margin examples/moveit_capture/panda_goal1/trajectory_live.csv \
+python -m realizability.lookahead_margin examples/moveit_capture/panda_goal1/trajectory_live.csv \
   --limits examples/moveit_capture/panda_goal1/limits.json --horizon 0.2
 ```
 ```text
