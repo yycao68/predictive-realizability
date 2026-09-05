@@ -10,7 +10,7 @@ Before publishing the empirical MoveIt benchmark:
 - [x] Record the complete trajectory-processing chain — OMPL RRTConnect → TOTG → live controller reference, documented explicitly including where the two exports diverge.
 - [x] Record sampling and differentiation method — controller publish rate (irregular; `np.gradient` supports nonuniform sampling), documented in the example's README.
 - [x] Save the machine-readable JSON report — `report_planned.json` / `report_live.json` shipped alongside.
-- [ ] Add plots of trajectory values versus declared limits.
+- [x] Add plots of trajectory values versus declared limits — `analyzer.py --plot` (matplotlib, optional dependency via `pip install -e ".[plot]"`); see `examples/moveit_capture/panda_goal1/` for a real plotted violation.
 - [x] Distinguish commanded/reference acceleration from measured physical acceleration — done in `MOVEIT_ISSUE.md`'s "Important distinction" and the README's CSV-format note; both call this an audit, not a measurement.
 - [x] Link the upstream MoveIt issue and related discussions — README and `MOVEIT_ISSUE.md` link #3778, #3779, #3849.
 - [x] Run the benchmark from a clean environment — fresh Docker container, freshly installed packages, confirmed working end to end (`moveit_export` → `analyzer`) on the real capture.

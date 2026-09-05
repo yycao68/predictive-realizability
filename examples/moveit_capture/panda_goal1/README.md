@@ -51,6 +51,14 @@ the artifact that actually surfaces the violation here.
 | peak velocity ratio | 0.653 | 0.731 |
 | peak acceleration ratio | 0.941 | **1.029 (violation, `panda_joint7`)** |
 
+## Plots
+
+`plot_planned.png` and `plot_live.png` (generated via `analyzer.py --plot`) show this
+directly: the planned export's acceleration-ratio panel dips toward zero right at the
+`t=0.4s` sign switch instead of showing the true discontinuous jump — a visible symptom of
+the under-sampling described above — while the live capture's panel clearly crosses the 1.0
+line on `panda_joint7` around `t=0.47s`.
+
 ## Reproduce
 
 ```bash
