@@ -50,7 +50,8 @@ predictive-realizability/
 ├── src/realizability/
 │   ├── __init__.py
 │   ├── analyzer.py
-│   └── moveit_export.py      # v0.2: JointTrajectory JSON -> this tool's CSV format
+│   ├── moveit_export.py      # v0.2: JointTrajectory JSON -> this tool's CSV format
+│   └── compare_stages.py     # v0.3: audit the same motion across pipeline stages
 ├── examples/
 │   ├── limits.json
 │   ├── demo_trajectory.csv
@@ -63,7 +64,8 @@ predictive-realizability/
 │       └── panda_goal1/
 ├── tests/
 │   ├── test_analyzer.py
-│   └── test_moveit_export.py
+│   ├── test_moveit_export.py
+│   └── test_compare_stages.py
 └── docs/
     ├── data_format.md
     ├── methodology.md
@@ -189,11 +191,25 @@ python -m realizability.analyzer /tmp/trajectory.csv \
   --limits examples/moveit_capture/panda_goal1/limits.json
 ```
 
-### v0.3
-Trajectory-stage comparison:
+### v0.3 — done
+Trajectory-stage comparison (`realizability.compare_stages`): audits the same underlying
+motion across any number of named pipeline stages and reports the first stage where the
+realizability audit transitions from PASS to FAIL — not tied to any specific pipeline
+(OMPL/TOTG/Ruckig/controller are example stage names, not requirements). Applied to
+`examples/moveit_capture/panda_goal1/`'s own planned-vs-live data:
 
+```bash
+python -m realizability.compare_stages \
+  planned=examples/moveit_capture/panda_goal1/trajectory_planned.csv \
+  live=examples/moveit_capture/panda_goal1/trajectory_live.csv \
+  --limits examples/moveit_capture/panda_goal1/limits.json
+```
 ```text
-OMPL → TOTG → Ruckig → controller reference
+stage                  peak velocity   peak acceleration     audit
+planned                       0.653x              0.941x      PASS
+live                          0.731x              1.029x      FAIL
+
+Realizability lost at stage 'live' (the stage before it still passed).
 ```
 
 ### v0.4
