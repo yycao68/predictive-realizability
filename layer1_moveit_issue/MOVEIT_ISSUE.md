@@ -76,6 +76,22 @@ not on its own sufficient evidence that a trajectory is realizable** — the liv
 sampled controller reference (or an equivalent fine resampling of the plan) is needed to
 surface a violation like this one.
 
+**Update (2026-09-05), addressing questions raised in review of this data:** the live
+capture's reported total duration (2.880 s) is noticeably longer than the planned
+trajectory's (0.826 s), which could look like the two aren't really the same execution. They
+are — the *active motion* in the live capture is 0.830 s (now reported directly as
+`active_duration_s` in every audit, alongside `leading_idle_s`/`trailing_idle_s`), matching
+the planned duration to within 0.5%. The remaining ~2.05 s is deliberate trailing idle time
+the capture script added to catch trailing controller-state samples after the robot reached
+its goal; the reported violation at `t≈0.470s` sits well inside the real motion window, not
+the idle tail. The benchmark also now supports plotting trajectory values against declared
+limits directly (`analyzer.py --plot`) — see the rendered
+[live-capture](https://github.com/yycao68/predictive-realizability/blob/main/examples/moveit_capture/panda_goal1/plot_live.png)
+and
+[planned-trajectory](https://github.com/yycao68/predictive-realizability/blob/main/examples/moveit_capture/panda_goal1/plot_planned.png)
+plots for this same data — the latter visibly shows the bang-bang under-sampling described
+above as a dip toward zero right at the sign switch, instead of the true discontinuous jump.
+
 ## Reproducibility protocol
 
 For a rigorous report, please record:
