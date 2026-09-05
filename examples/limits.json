@@ -1,0 +1,12 @@
+{
+  "joints": {
+    "joint1": {
+      "max_velocity": 2.0,
+      "max_acceleration": 4.0
+    },
+    "joint2": {
+      "max_velocity": 2.0,
+      "max_acceleration": 4.0
+    }
+  }
+}
