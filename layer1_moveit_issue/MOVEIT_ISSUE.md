@@ -141,3 +141,12 @@ A companion independent benchmark tool ([yycao68/predictive-realizability](https
 - and future predictive certification.
 
 This separation is intentional: the benchmark should remain useful even if a particular MoveIt implementation changes.
+
+The repository currently ships four worked example scenarios (`examples/scenarios/01_pass` through `04_position_violation`), each a synthetic single-joint trajectory tuned so exactly one of position/velocity/acceleration fails while the other two stay within bounds. These can be run directly with no MoveIt or ROS installation:
+
+```bash
+python -m realizability.analyzer examples/scenarios/02_acceleration_violation/trajectory.csv \
+  --limits examples/scenarios/02_acceleration_violation/limits.json
+```
+
+A helper that exports a real MoveIt trajectory into this tool's CSV format (replacing the synthetic examples above with the actual Panda case from this issue) is the next planned step, not yet built.
