@@ -52,7 +52,8 @@ predictive-realizability/
 │   ├── analyzer.py
 │   ├── moveit_export.py      # v0.2: JointTrajectory JSON -> this tool's CSV format
 │   ├── compare_stages.py     # v0.3: audit the same motion across pipeline stages
-│   └── predictive_margin.py  # v0.4: receding-horizon warning time / lead time
+│   ├── predictive_margin.py  # v0.4: receding-horizon warning time / lead time
+│   └── retime.py             # v0.5: uniform retiming, restores velocity/acceleration only
 ├── examples/
 │   ├── limits.json
 │   ├── demo_trajectory.csv
@@ -67,7 +68,8 @@ predictive-realizability/
 │   ├── test_analyzer.py
 │   ├── test_moveit_export.py
 │   ├── test_compare_stages.py
-│   └── test_predictive_margin.py
+│   ├── test_predictive_margin.py
+│   └── test_retime.py
 └── docs/
     ├── data_format.md
     ├── methodology.md
@@ -238,8 +240,30 @@ On this real trajectory the lead time comes out equal to the horizon itself acro
 0.05–0.3s sweep — expected here because the acceleration approaches the limit
 monotonically in this window, not a general guarantee for every signal shape.
 
-### v0.5
-Planner feedback / trajectory regeneration experiments.
+### v0.5 — done
+Planner feedback / trajectory regeneration (`realizability.retime`), scoped to the one
+mechanism this tool can implement without a dynamics model: uniform retiming. Slowing a
+trajectory down by a factor $\lambda$ (geometric path unchanged) scales velocity by
+$1/\lambda$ and acceleration by $1/\lambda^2$ — both purely kinematic. This is the same
+mechanism the Predictive Realizability paper calls Level 1, and it inherits the same real
+limitation: retiming cannot fix a **position** violation, since $q(t)$ itself never changes
+under pure time-dilation.
+
+```bash
+python -m realizability.retime examples/moveit_capture/panda_goal1/trajectory_live.csv \
+  --limits examples/moveit_capture/panda_goal1/limits.json
+```
+```text
+Retime factor: 1.0146x (binding: panda_joint7 acceleration)
+Before: velocity 0.731x, acceleration 1.029x, position_violation=False
+After:  velocity 0.721x, acceleration 1.000x, position_violation=False
+Fully restored: True
+```
+
+On the real goal1 acceleration violation, a **1.46% slowdown** is enough to fully restore it.
+On a position violation (`examples/scenarios/04_position_violation`), retiming correctly
+reports nothing it can do — `position_violation_remains: true`, `fully_restored: false` —
+rather than silently claiming success.
 
 ## Citation
 

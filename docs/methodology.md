@@ -73,3 +73,15 @@ audit every available representation. A trajectory that passes at P1 but fails a
 ## 5. Avoiding overclaim
 
 A failed audit does not automatically imply hardware damage, physical instability, controller failure, or universal software incorrectness. It establishes only that the evaluated trajectory representation exceeds the declared limit under the stated analysis method.
+
+## 6. Regeneration scope
+
+The paper's own hierarchy for restoring a lost margin is retime, then reshape, then reroute,
+then fall back — each a progressively larger intervention, retime being the cheapest and
+reshape/reroute needing a dynamics model this tool does not have. `realizability.retime`
+(v0.5) implements only retime: a uniform time-dilation $t' = \lambda t$ that scales velocity
+by $1/\lambda$ and acceleration by $1/\lambda^2$ while leaving $q(t)$ itself unchanged. That
+last fact is a real, load-bearing limitation, not an implementation gap to fill in later:
+retiming provably cannot restore a position-limit violation, because position never changes
+under pure time-dilation. `retime.py` reports this explicitly (`position_violation_remains`)
+rather than treating "audit still fails after retiming" as a bug.
