@@ -9,5 +9,8 @@ description = "Offline benchmark for trajectory realizability and constraint aud
 requires-python = ">=3.9"
 dependencies = ["numpy>=1.24"]
 
+[project.optional-dependencies]
+plot = ["matplotlib>=3.5"]
+
 [tool.setuptools.packages.find]
 where = ["src"]

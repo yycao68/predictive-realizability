@@ -129,3 +129,18 @@ def test_acceleration_source_is_labeled_numerical():
     report = _load_scenario("01_pass")
     assert report["velocity_source"] == "numerical_derivative"
     assert report["acceleration_source"] == "numerical_derivative"
+
+
+def test_cli_plot_flag_writes_a_file(tmp_path, monkeypatch, capsys):
+    pytest.importorskip("matplotlib")
+    from realizability import analyzer
+
+    d = ROOT / "examples/scenarios/01_pass"
+    output = tmp_path / "plot.png"
+    monkeypatch.setattr(
+        "sys.argv",
+        ["analyzer", str(d / "trajectory.csv"), "--limits", str(d / "limits.json"), "--plot", str(output)],
+    )
+    analyzer.main()
+    assert output.exists()
+    assert "Wrote" in capsys.readouterr().out
